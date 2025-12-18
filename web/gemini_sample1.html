@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini API 獨立測試 (智慧記憶版)</title>
+    <style>
+        body {
+            font-family: 'Microsoft JhengHei', sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f0f4f8;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        }
+
+        header {
+            border-bottom: 2px solid #e2e8f0;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+        }
+
+        h1 {
+            margin: 0;
+            color: #1a365d;
+            font-size: 24px;
+        }
+
+        label {
+            display: block;
+            margin-top: 20px;
+            font-weight: bold;
+            color: #2d3748;
+            font-size: 14px;
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px;
+            margin-top: 8px;
+            border: 1px solid #cbd5e0;
+            border-radius: 8px;
+            font-size: 15px;
+            box-sizing: border-box;
+            transition: all 0.3s;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #4299e1;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+        }
+
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        .button-group {
+            margin-top: 25px;
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            flex: 1;
+            padding: 14px;
+            font-size: 16px;
+            cursor: pointer;
+            background: #4299e1;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: #3182ce;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        #response {
+            background: #1a202c;
+            color: #e2e8f0;
+            padding: 20px;
+            margin-top: 25px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            font-family: 'Consolas', 'Monaco', monospace;
+            line-height: 1.6;
+            min-height: 80px;
+            border-left: 5px solid #4299e1;
+        }
+
+        .status-msg {
+            font-size: 13px;
+            margin-top: 8px;
+            color: #718096;
+        }
+
+        .memory-tag {
+            display: inline-block;
+            background: #ebf8ff;
+            color: #2b6cb0;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <header>
+            <h1>Google Gemini API 測試工具</h1>
+            <div id="memoryStatus" class="memory-tag" style="display:none;">已從瀏覽器記憶載入設定</div>
+        </header>
+
+        <label>Gemini API Key (AIza...):</label>
+        <input type="password" id="apiKey" placeholder="請貼上您的 Google AI Key">
+
+        <label>模型選擇:</label>
+        <select id="modelSelect">
+            <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash (最新實驗版)</option>
+            <option value="gemini-1.5-flash">Gemini 1.5 Flash (極速版)</option>
+            <option value="gemini-1.5-pro">Gemini 1.5 Pro (最強大)</option>
+            <option value="gemini-1.5-flash-8b">Gemini 1.5 Flash 8B (輕量級)</option>
+        </select>
+
+        <label>輸入詢問內容:</label>
+        <textarea id="userInput" placeholder="輸入問題..."></textarea>
+
+        <div class="button-group">
+            <button onclick="sendToGemini()">傳送請求</button>
+            <button onclick="clearMemory()" style="background:#a0aec0; flex: 0.3;">清空記憶</button>
+        </div>
+
+        <h2>AI 回覆內容:</h2>
+        <div id="response">等待輸入中...</div>
+        <div id="statusInfo" class="status-msg"></div>
+    </div>
+
+    <script>
+        window.onload = function () {
+            const savedKey = localStorage.getItem('gemini_saved_key');
+            const savedModel = localStorage.getItem('gemini_saved_model');
+
+            if (savedKey) {
+                document.getElementById('apiKey').value = savedKey;
+                document.getElementById('memoryStatus').style.display = 'inline-block';
+            }
+            if (savedModel) {
+                document.getElementById('modelSelect').value = savedModel;
+            }
+        };
+
+        function clearMemory() {
+            localStorage.removeItem('gemini_saved_key');
+            localStorage.removeItem('gemini_saved_model');
+            document.getElementById('apiKey').value = '';
+            document.getElementById('memoryStatus').style.display = 'none';
+            alert('記憶已清除！');
+        }
+
+        async function sendToGemini() {
+            const apiKey = document.getElementById('apiKey').value.trim();
+            const model = document.getElementById('modelSelect').value;
+            const userInput = document.getElementById('userInput').value.trim();
+            const responseDiv = document.getElementById('response');
+            const statusInfo = document.getElementById('statusInfo');
+
+            if (!apiKey || !userInput) {
+                responseDiv.textContent = '請確認 API Key 與 詢問內容 皆已填寫。';
+                return;
+            }
+
+            responseDiv.style.color = '#e2e8f0';
+            responseDiv.textContent = '正在與 Gemini 腦際連接中...';
+            statusInfo.textContent = '';
+
+            try {
+                const startTime = performance.now();
+                // Gemini API 使用 POST 請求，URL 包含 Key
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{ text: userInput }]
+                        }]
+                    })
+                });
+
+                const data = await response.json();
+                const endTime = performance.now();
+
+                if (response.ok) {
+                    localStorage.setItem('gemini_saved_key', apiKey);
+                    localStorage.setItem('gemini_saved_model', model);
+                    document.getElementById('memoryStatus').style.display = 'inline-block';
+
+                    const duration = ((endTime - startTime) / 1000).toFixed(2);
+
+                    // 解析 Gemini 的回傳結構
+                    if (data.candidates && data.candidates[0].content.parts[0].text) {
+                        responseDiv.textContent = data.candidates[0].content.parts[0].text;
+                        statusInfo.textContent = `呼叫成功 | 模型: ${model} | 費時: ${duration}秒`;
+                    } else {
+                        responseDiv.textContent = '接收到回傳但找不到文字內容。';
+                    }
+                } else {
+                    responseDiv.style.color = '#feb2b2';
+                    responseDiv.textContent = `Error ${response.status}: ` + (data.error ? data.error.message : '未知錯誤');
+                }
+            } catch (error) {
+                responseDiv.style.color = '#feb2b2';
+                responseDiv.textContent = '網路連線異常: ' + error.message;
+            }
+        }
+    </script>
+</body>
+
+</html>

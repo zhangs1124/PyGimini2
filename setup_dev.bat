@@ -23,19 +23,29 @@ if not "%GROQ_API_KEY%"=="" (
     )
 )
 
-:: --- 2. 檢查與設定 GITHUB_TOKEN ---
+:: --- 2. 檢查與設定 GEMINI_API_KEY ---
 echo.
-echo [2/2] 正在檢查 GitHub 認證 Token...
+echo [2/3] 正在檢查 Gemini API 金鑰...
+set "GEMINI_KEY="
+if not "%GEMINI_API_KEY%"=="" (
+    echo    v 找到系統變數 GEMINI_API_KEY
+    set "GEMINI_KEY=%GEMINI_API_KEY%"
+) else (
+    echo    ! 警告：找不到 Gemini 金鑰！請手動設定。
+)
+
+:: --- 3. 檢查與設定 GITHUB_TOKEN ---
+echo.
+echo [3/3] 正在檢查 GitHub 認證 Token...
 if not "%GITHUB_TOKEN%"=="" (
     echo    v 找到系統變數 GITHUB_TOKEN
     echo    ! 正在設定 Git 認證助手為 wincred...
     git config --global credential.helper wincred
 ) else (
     echo    x 系統中找不到 GITHUB_TOKEN！
-    echo    提示：建議產生一個 Personal Access Token 並執行 [setx GITHUB_TOKEN "your_token"]
 )
 
-:: --- 3. 產生本地 .env 檔案 ---
+:: --- 4. 產生本地 .env 檔案 ---
 echo.
 echo ---------------------------------------------------
 echo 正在建立/更新本機 .env 設定檔...
@@ -45,6 +55,10 @@ echo # 專案環境設定 > .env
 if not "!GROQ_KEY!"=="" (
     echo GROQ_API_KEY=!GROQ_KEY! >> .env
     echo    + 已寫入 GROQ_API_KEY
+)
+if not "!GEMINI_KEY!"=="" (
+    echo GEMINI_API_KEY=!GEMINI_KEY! >> .env
+    echo    + 已寫入 GEMINI_API_KEY
 )
 if not "%GITHUB_TOKEN%"=="" (
     echo GITHUB_TOKEN=%GITHUB_TOKEN% >> .env
