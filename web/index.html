@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Smart Search Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+</head>
+
+<body>
+    <div class="background-glow"></div>
+
+    <div class="container">
+        <header>
+            <h1>AI Smart Explorer</h1>
+            <p class="subtitle">自動化生成問句與搜尋建議</p>
+        </header>
+
+        <section class="config-section">
+            <div class="input-group">
+                <input type="password" id="api-key" placeholder="1. 先輸入 Groq API Key (gsk_...)" />
+            </div>
+
+            <div class="input-group" style="width: 100%; margin-top: 1rem;">
+                <textarea id="custom-question" placeholder="2. 在此輸入您的詢問內容（留空則自動生成隨機題目）..." rows="3"></textarea>
+            </div>
+
+            <div style="width: 100%; display: flex; justify-content: center; margin-top: 1rem;">
+                <button id="btn-generate">啟動 AI 分析與搜尋建議</button>
+            </div>
+        </section>
+
+        <div class="loader" id="loader"></div>
+
+        <section id="question-section" style="display: none;">
+            <div class="display-box">
+                <h3>原始生成問題</h3>
+                <p id="generated-question"></p>
+            </div>
+        </section>
+
+        <section id="result-section">
+            <div class="display-box" style="border-left-color: var(--secondary-color);">
+                <h3>Groq 建議搜尋詞</h3>
+                <ul id="queries-list" class="results-list">
+                    <!-- 結果將動態產生 -->
+                </ul>
+            </div>
+        </section>
+
+        <footer class="status" id="status-bar">
+            準備就緒。點擊按鈕開始。
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

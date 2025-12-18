@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+
+# 敏感資訊 (包含 API 鑰匙的檔案)
+readme.md
+test_logic.py
+test_groq.py
+
+# 環境與 IDE
+.vscode/
+.idea/
+.env
+
+# 系統檔案
+Thumbs.db
+Desktop.ini
