@@ -1,23 +1,35 @@
 import subprocess
+import os
 
-def get_git_key():
+def get_git_config(scope, key):
     try:
-        # 執行 git config 指令來獲取我們存入的值
         result = subprocess.run(
-            ['git', 'config', '--get', 'groq.api-key'], 
+            ['git', 'config', scope, key], 
             capture_output=True, 
-            text=True, 
-            check=True
+            text=True
         )
-        return result.stdout.strip()
-    except subprocess.CalledProcessError:
+        return result.stdout.strip() if result.returncode == 0 else None
+    except:
         return None
 
-key = get_git_key()
+print("\n" + "="*40)
+print(" 🔍 本地專案 Git 設定測試")
+print("="*40)
 
-print("\n--- Git Config 儲存測試 ---")
-if key:
-    print(f"解析成功！從 Git 設定中抓取到 Key: {key[:10]}...")
-    print("這表示您的金鑰現在隱藏在 .git 資料夾中，非常安全且不佔用環境變數。")
+# 測試 Groq Key
+groq_key = get_git_config('--local', 'groq.api-key')
+if groq_key:
+    print(f"✅ 找到本地 Groq Key: {groq_key[:10]}...")
 else:
-    print("失敗：Git 設定中找不到該金鑰。")
+    print("❌ 本地 .git/config 中找不到 groq.api-key")
+
+# 測試 GitHub 遠端連線資訊
+remote_url = get_git_config('--get', 'remote.origin.url')
+if remote_url:
+    print(f"✅ 找到遠端倉庫網址: {remote_url}")
+else:
+    print("❌ 找不到遠端倉庫連接資訊")
+
+print("-" * 40)
+print("提示：本地設定只對「這一個資料夾」有效。")
+print("="*40)
