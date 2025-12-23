@@ -56,7 +56,7 @@ $(document).ready(function () {
         $('#generated-question').text(question);
         $('#question-section').fadeIn();
 
-        const prompt = question;
+        const prompt = question + " 請給我10個簡單的搜尋問題，格式如下：1. 第一個問題 2. 第二個問題... 請直接列出問題，不要有其他說明文字。";
 
         try {
             $('#status-bar').text('正在呼叫 Groq API...');
@@ -79,18 +79,28 @@ $(document).ready(function () {
             const data = await response.json();
             const content = data.choices[0].message.content;
 
-            // 直接將回覆內容按行顯示
-            $('#queries-list').empty();
-            content.split('\n').forEach(line => {
-                if (line.trim()) appendListItem(line.trim());
-            });
+            // 解析結果 (假設格式為 1. xxx 2. xxx)
+            const lines = content.split('\n').filter(l => l.trim().match(/^\d+\./));
 
-            $('#status-bar').text('已讀取回覆。');
+            $('#queries-list').empty();
+            if (lines.length === 0) {
+                // 如果格式不如預期，嘗試簡單分割
+                content.split('\n').forEach(line => {
+                    if (line.trim()) appendListItem(line.trim());
+                });
+            } else {
+                lines.forEach(line => {
+                    const text = line.replace(/^\d+\.\s*/, '');
+                    appendListItem(text);
+                });
+            }
+
+            $('#status-bar').text('完成！點擊項目可直接在 Bing 搜尋。');
 
         } catch (error) {
             console.error(error);
             $('#status-bar').text('發生錯誤: ' + error.message);
-            alert("呼叫 API 失敗，請確認 Key 是否正確或網路暢通。");
+            alert("呼叫 API 失敗，請確認 Key 是否正確或網路通暢。");
         } finally {
             $('#loader').hide();
             $('#btn-generate').prop('disabled', false).text('再次生成並分析');
